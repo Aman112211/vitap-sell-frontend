@@ -1,23 +1,8 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import ListingCard from '../components/ListingCard'
+import { fetchAllListings, fetchListingsByType } from '../api/listing'
 import styles from './HomePage.module.css'
-
-// ── Mock listings (replace with real API fetch later) ──────────────────────
-const MOCK_LISTINGS = [
-  { id: 1, title: 'Engineering Mathematics – Kreyszig', category: 'Books', price: 320, condition: 'Good', seller: 'Riya M.', rating: 4.8, image: null, tags: ['maths', 'sem3'], daysAgo: 1 },
-  { id: 2, title: 'Dell XPS 13 Charger (65W)', category: 'Electronics', price: 850, condition: 'Like New', seller: 'Aarav K.', rating: 4.9, image: null, tags: ['laptop', 'dell'], daysAgo: 2 },
-  { id: 3, title: 'Data Structures Notes – Handwritten', category: 'Notes', price: 80, condition: 'Good', seller: 'Priya S.', rating: 4.6, image: null, tags: ['dsa', 'cs'], daysAgo: 0 },
-  { id: 4, title: 'Blue Noise-Cancelling Headphones', category: 'Electronics', price: 1200, condition: 'Used', seller: 'Dhruv T.', rating: 4.5, image: null, tags: ['audio', 'work'], daysAgo: 3 },
-  { id: 5, title: 'Fluid Mechanics – Frank White', category: 'Books', price: 400, condition: 'Fair', seller: 'Nandini V.', rating: 4.7, image: null, tags: ['mech', 'sem4'], daysAgo: 5 },
-  { id: 6, title: 'Study Desk Lamp (USB)', category: 'Furniture', price: 250, condition: 'Like New', seller: 'Kiran P.', rating: 4.9, image: null, tags: ['lamp', 'room'], daysAgo: 1 },
-  { id: 7, title: 'VIT AP Hoodie – L size', category: 'Clothing', price: 550, condition: 'Good', seller: 'Sneha R.', rating: 4.3, image: null, tags: ['hoodie', 'merch'], daysAgo: 4 },
-  { id: 8, title: 'Casio FX-991EX Scientific Calculator', category: 'Electronics', price: 600, condition: 'Like New', seller: 'Rohan G.', rating: 4.8, image: null, tags: ['calc', 'exams'], daysAgo: 0 },
-  { id: 9, title: 'Operating Systems – Galvin 10e', category: 'Books', price: 380, condition: 'Good', seller: 'Meera L.', rating: 4.6, image: null, tags: ['os', 'cs'], daysAgo: 6 },
-  { id: 10, title: 'Mini Fridge (45L)', category: 'Furniture', price: 3500, condition: 'Used', seller: 'Arjun S.', rating: 4.4, image: null, tags: ['fridge', 'room'], daysAgo: 7 },
-  { id: 11, title: 'Thermodynamics Lab Notes', category: 'Notes', price: 60, condition: 'Good', seller: 'Farhan A.', rating: 4.5, image: null, tags: ['thermo', 'mech'], daysAgo: 2 },
-  { id: 12, title: 'Rain Jacket – M size', category: 'Clothing', price: 700, condition: 'Like New', seller: 'Ishaan B.', rating: 4.7, image: null, tags: ['rain', 'jacket'], daysAgo: 3 },
-]
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest first' },
@@ -33,33 +18,57 @@ export default function HomePage() {
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState('newest')
   const [condition, setCondition] = useState('All')
+  const [listings, setListings] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError('')
+      try {
+        const data = activeCategory === 'All'
+          ? await fetchAllListings()
+          : await fetchListingsByType(activeCategory)
+        if (!cancelled) setListings(data)
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'Failed to load listings')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [activeCategory])
 
   const filtered = useMemo(() => {
-    let items = MOCK_LISTINGS
+    let items = listings
 
     if (activeCategory !== 'All') {
-      items = items.filter((l) => l.category === activeCategory)
+      const catKey = activeCategory.toUpperCase()
+      items = items.filter((l) => (l.category ?? '').toString().toUpperCase() === catKey)
     }
     if (condition !== 'All') {
-      items = items.filter((l) => l.condition === condition)
+      const condKey = condition.toUpperCase()
+      items = items.filter((l) => (l.condition ?? '').toString().toUpperCase() === condKey)
     }
     if (search.trim()) {
       const q = search.toLowerCase()
       items = items.filter(
         (l) =>
           l.title.toLowerCase().includes(q) ||
-          l.category.toLowerCase().includes(q) ||
-          l.tags.some((t) => t.includes(q))
+          l.category.toLowerCase().includes(q)
       )
     }
 
     switch (sort) {
       case 'price_asc':  return [...items].sort((a, b) => a.price - b.price)
       case 'price_desc': return [...items].sort((a, b) => b.price - a.price)
-      case 'rating':     return [...items].sort((a, b) => b.rating - a.rating)
-      default:           return [...items].sort((a, b) => a.daysAgo - b.daysAgo)
+      case 'rating':     return [...items].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+      default:           return [...items].sort((a, b) => (a.daysAgo ?? 0) - (b.daysAgo ?? 0))
     }
-  }, [activeCategory, search, sort, condition])
+  }, [activeCategory, search, sort, condition, listings])
 
   return (
     <>
@@ -148,6 +157,8 @@ export default function HomePage() {
               {activeCategory !== 'All' ? ` in ${activeCategory}` : ''}
               {search ? ` for "${search}"` : ''}
             </span>
+            {loading && <span className={styles.resultsCount}>Loading…</span>}
+            {error && <span className={styles.resultsCount} style={{ color: 'red' }}>{error}</span>}
           </div>
 
           {filtered.length === 0 ? (

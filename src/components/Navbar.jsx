@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import styles from './Navbar.module.css'
 
-const CATEGORIES = ['All', 'Books', 'Electronics', 'Notes', 'Clothing', 'Furniture', 'Other']
+const CATEGORIES = ['All', 'Product', 'Books', 'Electronics', 'Notes', 'Clothing', 'Furniture', 'Other']
 
 export default function Navbar({ activeCategory, onCategory }) {
   const { user, logout } = useAuth()

@@ -3,28 +3,31 @@ import styles from './ListingCard.module.css'
 
 // Pastel placeholder backgrounds per category
 const CATEGORY_COLORS = {
-  Books:       { bg: '#fef3ec', accent: '#e85d2f' },
-  Electronics: { bg: '#edf0fd', accent: '#2f6de8' },
-  Notes:       { bg: '#fdf9ec', accent: '#c9a84c' },
-  Clothing:    { bg: '#f0fdf4', accent: '#22c55e' },
-  Furniture:   { bg: '#f5f0fd', accent: '#7c3aed' },
-  Other:       { bg: '#f5f0e8', accent: '#7a7468' },
+  BOOKS:       { bg: '#fef3ec', accent: '#e85d2f' },
+  ELECTRONICS: { bg: '#edf0fd', accent: '#2f6de8' },
+  NOTES:       { bg: '#fdf9ec', accent: '#c9a84c' },
+  CLOTHING:    { bg: '#f0fdf4', accent: '#22c55e' },
+  FURNITURE:   { bg: '#f5f0fd', accent: '#7c3aed' },
+  PRODUCT:     { bg: '#f5f0fd', accent: '#2f6de8' },
+  OTHER:       { bg: '#f5f0e8', accent: '#7a7468' },
 }
 
 const CATEGORY_EMOJI = {
-  Books:       '📖',
-  Electronics: '💻',
-  Notes:       '📝',
-  Clothing:    '👕',
-  Furniture:   '🪑',
-  Other:       '📦',
+  BOOKS:       '📖',
+  ELECTRONICS: '💻',
+  NOTES:       '📝',
+  CLOTHING:    '👕',
+  FURNITURE:   '🪑',
+  PRODUCT:     '💻',
+  OTHER:       '📦',
 }
 
 const CONDITION_COLORS = {
-  'Like New': { bg: '#dcfce7', color: '#15803d' },
-  'Good':     { bg: '#fef9c3', color: '#a16207' },
-  'Fair':     { bg: '#ffedd5', color: '#c2410c' },
-  'Used':     { bg: '#f1f5f9', color: '#475569' },
+  'LIKE NEW': { bg: '#dcfce7', color: '#15803d' },
+  'GOOD':     { bg: '#fef9c3', color: '#a16207' },
+  'FAIR':     { bg: '#ffedd5', color: '#c2410c' },
+  'USED':     { bg: '#f1f5f9', color: '#475569' },
+  'UNKNOWN':  { bg: '#e5e7eb', color: '#374151' },
 }
 
 function timeAgo(days) {
@@ -35,14 +38,19 @@ function timeAgo(days) {
 
 export default function ListingCard({ listing }) {
   const [saved, setSaved] = useState(false)
-  const colors = CATEGORY_COLORS[listing.category] || CATEGORY_COLORS.Other
-  const condStyle = CONDITION_COLORS[listing.condition] || {}
+  const categoryKey = listing.category?.toString().toUpperCase() || 'OTHER'
+  const colors = CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.OTHER
+  const condKey = listing.condition?.toString().toUpperCase() || 'UNKNOWN'
+  const condStyle = CONDITION_COLORS[condKey] || CONDITION_COLORS.UNKNOWN
+  const sellerName = listing.seller || 'Seller'
+  const priceValue = Number.isFinite(listing.price) ? listing.price : 0
+  const timeLabel = Number.isFinite(listing.daysAgo) ? timeAgo(listing.daysAgo) : 'Recently'
 
   return (
     <div className={styles.card}>
       {/* Image / Placeholder */}
       <div className={styles.imageWrap} style={{ background: colors.bg }}>
-        <span className={styles.emoji}>{CATEGORY_EMOJI[listing.category] || '📦'}</span>
+        <span className={styles.emoji}>{CATEGORY_EMOJI[categoryKey] || '📦'}</span>
         <button
           className={`${styles.saveBtn} ${saved ? styles.saved : ''}`}
           onClick={() => setSaved((s) => !s)}
@@ -64,7 +72,7 @@ export default function ListingCard({ listing }) {
           >
             {listing.condition}
           </span>
-          <span className={styles.time}>{timeAgo(listing.daysAgo)}</span>
+          <span className={styles.time}>{timeLabel}</span>
         </div>
 
         <h3 className={styles.title}>{listing.title}</h3>
@@ -72,16 +80,16 @@ export default function ListingCard({ listing }) {
         <div className={styles.footer}>
           <div className={styles.priceWrap}>
             <span className={styles.rupee}>₹</span>
-            <span className={styles.price}>{listing.price.toLocaleString('en-IN')}</span>
+            <span className={styles.price}>{priceValue.toLocaleString('en-IN')}</span>
           </div>
 
           <div className={styles.sellerWrap}>
             <div className={styles.sellerAvatar}>
-              {listing.seller.slice(0, 1)}
+              {sellerName.slice(0, 1)}
             </div>
             <div className={styles.sellerInfo}>
-              <span className={styles.sellerName}>{listing.seller}</span>
-              <span className={styles.sellerRating}>★ {listing.rating}</span>
+              <span className={styles.sellerName}>{sellerName}</span>
+              {listing.rating && <span className={styles.sellerRating}>★ {listing.rating}</span>}
             </div>
           </div>
         </div>
