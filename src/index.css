@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+
+:root {
+  --ink: #0e0c0a;
+  --paper: #f5f0e8;
+  --cream: #ede8dc;
+  --accent: #e85d2f;
+  --accent2: #2f6de8;
+  --gold: #c9a84c;
+  --muted: #7a7468;
+  --card: #ffffff;
+  --border: #ddd8ce;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Syne', sans-serif;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+input, select, button, textarea {
+  font-family: inherit;
+}
+
+a { text-decoration: none; color: inherit; }
